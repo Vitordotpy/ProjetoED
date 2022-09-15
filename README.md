@@ -1,2 +1,11 @@
-# ProjetoED
-Repositorio do projeto de Estrutura de Dados
+# Burro (Card Game)
+
+## Build
+```bash
+cc -o main main.c
+```
+
+## Usage
+```bash
+./main
+```
