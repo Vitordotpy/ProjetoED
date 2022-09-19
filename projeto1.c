@@ -3,7 +3,7 @@
 #include <ctype.h>   //usado toupper
 #include <string.h>  //usado strcmp
 #include <time.h>
-/*Lembrete: para indicar hora de saída verificar se o dia atual é igual ao dia do ultimo ponto batido*/
+
 typedef struct Colaborador{
     char date;
     char timeIn;
@@ -43,7 +43,7 @@ void baterPonto(int id){
     }
 
     fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o curso no final do arquivo
-    fwrite(registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
+    fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
     fclose(fileFuncionario); //fecha o arquivo
 };
 
@@ -163,8 +163,8 @@ void alterar(){
             fflush(stdin);
             resposta=toupper(resposta);
             }while (resposta!="N");
-            fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o curso no final do arquivo
-            fwrite(registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
+            fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor no final do arquivo
+            fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
             fclose(fileFuncionario);
             break;
             
@@ -192,14 +192,14 @@ void remover(){
 char getDate(){ //adquirir a data atual
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    char date = {"%d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday};
+    char date[] = (char)("%d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
     return date;
 }
 
 char getTime(){ //adquirir a hora atual
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    char time = {"%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec};
+    char time[] = (char)("%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
     return time;
 }
 
