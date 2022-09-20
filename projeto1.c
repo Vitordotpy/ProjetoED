@@ -190,6 +190,32 @@ void alterar(){
 };
 
 void remover(){
+    int id = inputId();
+    int date = inputDate();
+    char resposta;
+
+    fopen(id, "a+b");
+
+    fseek(fileFuncionario, 0, 0);
+    do{
+        fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
+        if(strcmp(registroFuncionario.date, date)==0){
+            registroFuncionario.date = NULL;
+            fseek(fileFuncionario, -sizeof(ColType), 1);
+            fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
+            fclose(fileFuncionario);
+        }
+    }while(!feof(fileFuncionario));
+
+    printf("\nNova Exclusão? S/N ");
+    scanf(" %c",&resposta);
+    fflush(stdin);
+    resposta=toupper(resposta);
+    if(resposta=="S"){
+        remover();
+    }else{
+        system("pause");
+    }
 
 };
 
