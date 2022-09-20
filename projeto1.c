@@ -42,7 +42,7 @@ void baterPonto(int id){
         registroFuncionario.timeOut = currentTime; //caso contrario registra a hora atual como horario de saída
     }
 
-    fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o curso no final do arquivo
+    fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor onde leitura esta
     fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
     fclose(fileFuncionario); //fecha o arquivo
 };
@@ -52,6 +52,8 @@ void calcularHoras(int id){
     int hours;
 
     fileFuncionario = fopen(id, "a+b");
+
+    fseek(fileFuncionario, 0, 0);
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
@@ -78,6 +80,8 @@ void consultaTotal(int id){
     system("cls");
 
     fileFuncionario = fopen(id, "a+b");
+
+    fseek(fileFuncionario, 0, 0);
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
@@ -163,7 +167,7 @@ void alterar(){
             fflush(stdin);
             resposta=toupper(resposta);
             }while (resposta!="N");
-            fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor no final do arquivo
+            fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor onde a leitura está
             fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
             fclose(fileFuncionario);
             break;
