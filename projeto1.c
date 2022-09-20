@@ -17,27 +17,76 @@ FILE *fileFuncionario;
 
 char currentDate;
 char currentTime;
+char resposta;
 
 int option;
 
-void baterPonto(int id){
-    currentDate = getDate();
-    currentTime = getTime();
+char *getDate(){ //adquirir a data atual
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char year = (char) (tm.tm_year + 1900);
+    char month = (char) (tm.tm_mon + 1);
+    char day = (char) (tm.tm_mday);
+    char date[] = {year, month, day};
+    currentDate = date;
+    return;
+}
 
-    fileFuncionario = fopen(id, "a+b"); //abrir o arquivo
+char *getTime(){ //adquirir a hora atual
+    time_t t = time(NULL);
+    struct tm tm = *localtime(&t);
+    char hour = (char) (tm.tm_hour);
+    char min = (char) (tm.tm_min);
+    char sec = (char) (tm.tm_sec);
+    char time[] = {hour, min, sec};
+    currentTime = time;
+    return;
+}
+
+void input(){ //input template para option
+    printf("Opcao: ");
+    scanf("%i",&option);
+    fflush(stdin);
+    return;
+};
+
+int inputId(){ //input template para o ID
+    system("cls");
+    int id;
+    printf("Inserir ID: ");
+    scanf("%i",&id);
+    fflush(stdin);
+    return id;
+};
+
+int inputDate(){ //input template para a data
+    system("cls");
+    char date;
+    printf("Inserir Data (DD-MM-AAAA): ");
+    scanf("%s",&date);
+    fflush(stdin);
+    return date;
+};
+
+void baterPonto(){
+    const char id = (char) inputId();
+    getDate();
+    getTime();
+
+    fileFuncionario = fopen(&id, "a+b"); //abrir o arquivo
 
     short found = 0;
     do{
 	fread(&registroFuncionario,sizeof(ColType),1,fileFuncionario); //ler o arquivo
-	if (strcmp(registroFuncionario.date, currentDate)==0){ //testar se a data é igual a data atual
+	if (strcmp(&registroFuncionario.date, &currentDate)==0){ //testar se a data é igual a data atual
 	  found=1;}}
     while (!feof(fileFuncionario)); //fazer isso enquanto nao estiver no final do arquivo
 
     if (found == 0){ //se nao há data registrada, registra a data e hora atual no arquivo
         registroFuncionario.date = currentDate;
         registroFuncionario.timeIn = currentTime;
-        registroFuncionario.timeOut = NULL;
-        registroFuncionario.details = NULL;
+        registroFuncionario.timeOut = "";
+        registroFuncionario.details = "";
     }else{
         registroFuncionario.timeOut = currentTime; //caso contrario registra a hora atual como horario de saída
     }
@@ -47,11 +96,12 @@ void baterPonto(int id){
     fclose(fileFuncionario); //fecha o arquivo
 };
 
-void calcularHoras(int id){
+void calcularHoras(){
+    const char id = (char) inputId();
     system("cls");
     int hours;
 
-    fileFuncionario = fopen(id, "a+b");
+    fileFuncionario = fopen(&id, "a+b");
 
     fseek(fileFuncionario, 0, 0);
 
@@ -64,43 +114,42 @@ void calcularHoras(int id){
 
     printf("Horas Trabalhadas: %i \n", hours);
 
-        char resposta;
     printf("\nNova Consulta? S/N ");
-    scanf(" %c",&resposta);
+    scanf(" %s",&resposta);
     fflush(stdin);
     resposta=toupper(resposta);
-    if(resposta=="S"){
+    if(resposta=='S'){
         calcularHoras(inputId());
     }else{
         system("pause");
     }
 };
 
-void consultaTotal(int id){
+void consultaTotal(){
+    const char id = (char) inputId();
     system("cls");
 
-    fileFuncionario = fopen(id, "a+b");
+    fileFuncionario = fopen(&id, "a+b");
 
     fseek(fileFuncionario, 0, 0);
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(registroFuncionario.date =! NULL){
-            printf("***** %s *****\n\n", registroFuncionario.date);
-            printf("Chegada: %s\n",registroFuncionario.timeIn);
-            printf("Saida: %s\n",registroFuncionario.timeOut);
-            printf("Observações: %s\n\n",registroFuncionario.details);
+        if(registroFuncionario.date =! 'NULL'){
+            printf("***** %c *****\n\n", registroFuncionario.date);
+            printf("Chegada: %c\n",registroFuncionario.timeIn);
+            printf("Saida: %c\n",registroFuncionario.timeOut);
+            printf("Observações: %c\n\n",registroFuncionario.details);
         }
     }while (!feof(fileFuncionario));
 
     fclose(fileFuncionario);
 
-    char resposta;
     printf("\nNova Consulta? S/N ");
-    scanf(" %c",&resposta);
+    scanf(" %s",&resposta);
     fflush(stdin);
     resposta=toupper(resposta);
-    if(resposta=="S"){
+    if(resposta=='S'){
         consultaTotal(inputId());
     }else{
         system("pause");
@@ -108,23 +157,22 @@ void consultaTotal(int id){
 };
 
 void alterar(){
-    int id = inputId();
+    const char id = (char)inputId();
     char date = inputDate();
-    char resposta;
 
     system("cls");
 
-    fileFuncionario = fopen(id, "a+b");
+    fileFuncionario = fopen(&id, "a+b");
 
     fseek(fileFuncionario, 0, 0);
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcomp(registroFuncionario.date, date) == 0){
-            printf("***** %s *****\n\n", registroFuncionario.date);
-            printf("Chegada: %s\n",registroFuncionario.timeIn);
-            printf("Saida: %s\n",registroFuncionario.timeOut);
-            printf("Observacoes: %s\n\n",registroFuncionario.details);
+        if(strcmp(&registroFuncionario.date, &date) == 0){
+            printf("***** %c *****\n\n", registroFuncionario.date);
+            printf("Chegada: %c\n",registroFuncionario.timeIn);
+            printf("Saida: %c\n",registroFuncionario.timeOut);
+            printf("Observacoes: %c\n\n",registroFuncionario.details);
 
             do
             {
@@ -132,33 +180,33 @@ void alterar(){
             printf("1 - Chegada\n");
             printf("2 - Saida\n");
             printf("3 - Observacoes\n");
-            scanf(" %c",&resposta);
+            scanf(" %s",&resposta);
             fflush(stdin);
             resposta=toupper(resposta);
                 switch (resposta)
             {
             case 1:
-                char novaChegada;
                 system("cls");
                 printf("Nova chegada: ");
-                scanf(" %c", &novaChegada);
+                char novaChegada;
+                scanf(" %s", &novaChegada);
                 fflush(stdin);
                 registroFuncionario.timeIn = novaChegada;
                 break;
             
             case 2:
-                char novaSaida;
                 system("cls");
                 printf("Nova saida: ");
-                scanf(" %c", &novaSaida);
+                char novaSaida;
+                scanf(" %s", &novaSaida);
                 fflush(stdin);
                 registroFuncionario.timeOut = novaSaida;
                 break;
             case 3:
-                char observacoes;
                 system("cls");
                 printf("Observacoes: ");
-                scanf(" %c", &observacoes);
+                char observacoes;
+                scanf(" %s", &observacoes);
                 fflush(stdin);
                 registroFuncionario.details = observacoes;
             }
@@ -166,7 +214,7 @@ void alterar(){
             scanf(" %c",&resposta);
             fflush(stdin);
             resposta=toupper(resposta);
-            }while (resposta!="N");
+            }while (resposta!='S');
             fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor onde a leitura está
             fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
             fclose(fileFuncionario);
@@ -177,10 +225,10 @@ void alterar(){
     }while (!feof(fileFuncionario));
 
     printf("\nNova Alteracao? S/N ");
-    scanf(" %c",&resposta);
+    scanf(" %s",&resposta);
     fflush(stdin);
     resposta=toupper(resposta);
-    if(resposta=="S"){
+    if(resposta=='S'){
         alterar();
     }else{
         system("pause");
@@ -190,17 +238,16 @@ void alterar(){
 };
 
 void remover(){
-    int id = inputId();
-    int date = inputDate();
-    char resposta;
+    const char id = (char) inputId();
+    char date = inputDate();
 
-    fopen(id, "a+b");
+    fopen(&id, "a+b");
 
     fseek(fileFuncionario, 0, 0);
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(registroFuncionario.date, date)==0){
-            registroFuncionario.date = NULL;
+        if(strcmp(&registroFuncionario.date, &date)==0){
+            registroFuncionario.date = "NULL";
             fseek(fileFuncionario, -sizeof(ColType), 1);
             fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
             fclose(fileFuncionario);
@@ -208,54 +255,15 @@ void remover(){
     }while(!feof(fileFuncionario));
 
     printf("\nNova Exclusão? S/N ");
-    scanf(" %c",&resposta);
+    scanf(" %s",&resposta);
     fflush(stdin);
     resposta=toupper(resposta);
-    if(resposta=="S"){
+    if(resposta=='S'){
         remover();
     }else{
         system("pause");
     }
 
-};
-
-char getDate(){ //adquirir a data atual
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    char date[] = (char)("%d-%02d-%02d", tm.tm_year + 1900, tm.tm_mon + 1, tm.tm_mday);
-    return date;
-}
-
-char getTime(){ //adquirir a hora atual
-    time_t t = time(NULL);
-    struct tm tm = *localtime(&t);
-    char time[] = (char)("%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
-    return time;
-}
-
-void input(){ //input template para option
-    printf("Opcao: ");
-    scanf("%s",&option);
-    fflush(stdin);
-    return;
-};
-
-int inputId(){ //input template para o ID
-    system("cls");
-    int id;
-    printf("Inserir ID: ");
-    scanf("%s",&id);
-    fflush(stdin);
-    return id;
-};
-
-int inputDate(){ //input template para a data
-    system("cls");
-    char date;
-    printf("Inserir Data (DD-MM-AAAA): ");
-    scanf("%s",&date);
-    fflush(stdin);
-    return date;
 };
 
 int main()
@@ -279,7 +287,7 @@ int main()
                 input();
                 //Bater ponto
                 if(option == 1){
-                    baterPonto(inputId());
+                    baterPonto();
                 }
             }
             break;
@@ -297,10 +305,10 @@ int main()
                 switch (option)
                 {
                 case 1: //calcular horas trabalhadas, a partir do id
-                    calcularHoras(inputId());
+                    calcularHoras();
                     break;
                 case 2: //consulta total, a partir do id
-                    consultaTotal(inputId());
+                    consultaTotal();
                     break;
                 case 3: //alterar campos, a partir do id e após achar, pesquisa uma data e realiza a alteração
                     alterar();
