@@ -16,6 +16,8 @@ typedef struct Colaborador{
 ColType registroFuncionario;
 Str20 currentDate;
 Str20 currentTime;
+Str20 id;
+Str20 searchDate;
 
 FILE *fileFuncionario;
 
@@ -26,22 +28,14 @@ int option;
 void getDate(){ //adquirir a data atual
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    char year = (char) (tm.tm_year + 1900);
-    char month = (char) (tm.tm_mon + 1);
-    char day = (char) (tm.tm_mday);
-    Str20 date = {year,'-', month,'-', day};
-    strcpy(currentDate, date);
+    sprintf(currentDate, "%02d/%02d/%d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
     return;
 }
 
 void getTime(){ //adquirir a hora atual
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
-    char hour = (char) (tm.tm_hour);
-    char min = (char) (tm.tm_min);
-    char sec = (char) (tm.tm_sec);
-    Str20 time = {hour,':', min,':', sec};
-    strcpy(currentTime, time);
+    sprintf(currentTime, "%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
     return;
 }
 
@@ -52,62 +46,68 @@ void input(){ //input template para option
     return;
 };
 
-int inputId(){ //input template para o ID
+void inputId(){ //input template para o ID
     system("cls");
-    int id;
     printf("Inserir ID: ");
-    scanf("%i",&id);
+    scanf("%s",id);
     fflush(stdin);
-    return id;
+    return;
 };
 
-char inputDate(){ //input template para a data
+void inputDate(){ //input template para a data
     system("cls");
-    char date;
-    printf("Inserir Data (DD-MM-AAAA): ");
-    scanf("%s",&date);
+    printf("Inserir Data (DD/MM/AAAA): ");
+    scanf("%s",searchDate);
     fflush(stdin);
-    return date;
+    return;
 };
 
 void baterPonto(){
-    const char id = (char) inputId();
+    inputId();
     getDate();
     getTime();
 
-    fileFuncionario = fopen(&id, "a+b"); //abrir o arquivo
+    fileFuncionario = fopen(id, "a+b"); //abrir o arquivo
 
-    short found = 0;
+    fseek(fileFuncionario, 0, 0);
+
+    int found = 0;
     do{
 	fread(&registroFuncionario,sizeof(ColType),1,fileFuncionario); //ler o arquivo
 	if (strcmp(registroFuncionario.date, currentDate)==0){ //testar se a data é igual a data atual
-	  found=1;}}
-    while (!feof(fileFuncionario)); //fazer isso enquanto nao estiver no final do arquivo
+        found = 1;}
+        }
+    while (!feof(fileFuncionario) && (found!=1)); //fazer isso enquanto nao estiver no final do arquivo
 
     if (found == 0){ //se nao há data registrada, registra a data e hora atual no arquivo
         strcpy(registroFuncionario.date, currentDate);
         strcpy(registroFuncionario.timeIn, currentTime);
+        fseek(fileFuncionario, -sizeof(ColType), 1);
     }else{
-        strcpy(registroFuncionario.timeOut, currentTime); //caso contrario registra a hora atual como horario de saída
-    }
-
-    fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor onde leitura esta
+        strcpy(registroFuncionario.timeOut, currentTime);
+        fseek(fileFuncionario, -sizeof(ColType), 2);
+    };
     fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
-    fclose(fileFuncionario); //fecha o arquivo
+    fclose(fileFuncionario); //fecha o arquivo 
+
+    system("pause");
 };
 
 void calcularHoras(){
-    const char id = (char) inputId();
+    inputId();
+
     system("cls");
+
     int hours;
+    char temp[20];
 
-    fileFuncionario = fopen(&id, "a+b");
+    fileFuncionario = fopen(id, "r+b");
 
-    fseek(fileFuncionario, 0, 0);
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        hours += (int)registroFuncionario.timeIn;
+        strncpy(temp,registroFuncionario.timeIn, 2);
+        hours = (int) temp;
     }while (!feof(fileFuncionario));
 
     fclose(fileFuncionario);
@@ -119,23 +119,21 @@ void calcularHoras(){
     fflush(stdin);
     resposta=toupper(resposta);
     if(resposta=='S'){
-        calcularHoras(inputId());
+        calcularHoras();
     }else{
         system("pause");
     }
 };
 
 void consultaTotal(){
-    const char id = (char) inputId();
+    inputId();
     system("cls");
 
-    fileFuncionario = fopen(&id, "a+b");
-
-    fseek(fileFuncionario, 0, 0);
+    fileFuncionario = fopen(id, "r+b");
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(registroFuncionario.date, "NULL")){
+        if(strcmp(registroFuncionario.date, "NULL")!=0){
             printf("***** %s *****\n\n", registroFuncionario.date);
             printf("Chegada: %s\n",registroFuncionario.timeIn);
             printf("Saida: %s\n",registroFuncionario.timeOut);
@@ -150,25 +148,25 @@ void consultaTotal(){
     fflush(stdin);
     resposta=toupper(resposta);
     if(resposta=='S'){
-        consultaTotal(inputId());
+        consultaTotal();
     }else{
         system("pause");
     }
 };
 
 void alterar(){
-    const char id = (char)inputId();
-    char date = inputDate();
+    inputId();
+    inputDate();
 
     system("cls");
 
-    fileFuncionario = fopen(&id, "a+b");
+    fileFuncionario = fopen(id, "r+b");
 
-    fseek(fileFuncionario, 0, 0);
-
+    int found = 0;
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(registroFuncionario.date, &date) == 0){
+        if(strcmp(registroFuncionario.date, searchDate) == 0){
+            found = 1;
             printf("***** %s *****\n\n", registroFuncionario.date);
             printf("Chegada: %s\n",registroFuncionario.timeIn);
             printf("Saida: %s\n",registroFuncionario.timeOut);
@@ -181,29 +179,23 @@ void alterar(){
             printf("2 - Saida\n");
             printf("3 - Observacoes\n");
             scanf(" %s",&resposta);
-            fflush(stdin);
-            resposta=toupper(resposta);
-                switch (resposta)
-            {
-            case 1:
-                system("cls");
+            system("cls");
+            if (resposta=='1'){
                 printf("Nova chegada: ");
                 Str20 novaChegada;
                 scanf(" %s", novaChegada);
                 fflush(stdin);
                 strcpy(registroFuncionario.timeIn, novaChegada);
-                break;
+            }
             
-            case 2:
-                system("cls");
+            else if (resposta == '2'){
                 printf("Nova saida: ");
                 Str20 novaSaida;
                 scanf(" %s", novaSaida);
                 fflush(stdin);
                 strcpy(registroFuncionario.timeOut, novaSaida);
-                break;
-            case 3:
-                system("cls");
+            }
+            else if (resposta == '3'){
                 printf("Observacoes: ");
                 Str20 observacoes;
                 scanf(" %s", observacoes);
@@ -211,10 +203,10 @@ void alterar(){
                 strcpy(registroFuncionario.details, observacoes);
             }
             printf("\nAlterar Outro Campo? S/N ");
-            scanf(" %c",&resposta);
+            scanf(" %s",&resposta);
             fflush(stdin);
             resposta=toupper(resposta);
-            }while (resposta!='S');
+            }while (resposta!='N');
             fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor onde a leitura está
             fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
             fclose(fileFuncionario);
@@ -223,6 +215,10 @@ void alterar(){
             
         }
     }while (!feof(fileFuncionario));
+
+    if(found == 0){
+        printf("Registro não encontrado!\n\n");
+    }
 
     printf("\nNova Alteracao? S/N ");
     scanf(" %s",&resposta);
@@ -238,22 +234,24 @@ void alterar(){
 };
 
 void remover(){
-    const char id = (char) inputId();
-    char date = inputDate();
+    inputId();
+    inputDate();
 
-    fopen(&id, "a+b");
-
-    fseek(fileFuncionario, 0, 0);
+    fopen(id, "r+b");
+    int found = 0;
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(registroFuncionario.date, &date)==0){
-            strcpy(registroFuncionario.date, "NULL");
-            fseek(fileFuncionario, -sizeof(ColType), 1);
-            fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-            fclose(fileFuncionario);
+        if(strcmp(registroFuncionario.date, searchDate)==0){
+            found = 1;
         }
-    }while(!feof(fileFuncionario));
+    }while(!feof(fileFuncionario) && (found !=1));
 
+    if(found ==1){
+        strcpy(registroFuncionario.date, "NULL");
+        fseek(fileFuncionario, -sizeof(ColType), 1);
+        fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
+        fclose(fileFuncionario);
+    }
     printf("\nNova Exclusão? S/N ");
     scanf(" %s",&resposta);
     fflush(stdin);
@@ -283,7 +281,7 @@ int main()
                 system("cls");
                 printf("******** FUNCIONARIO ********\n\n");
                 printf("1 - Bater Ponto\n");
-                printf("2 - Sair\n");
+                printf("2 - Voltar\n");
                 input();
                 //Bater ponto
                 if(option == 1){
@@ -300,7 +298,7 @@ int main()
                 printf("2 - Consulta Total de Funcionario\n");
                 printf("3 - Alterar Ponto de Funcionario\n");
                 printf("4 - Remover Ponto de Funcionario\n");
-                printf("5 - Sair\n");
+                printf("5 - Voltar\n");
                 input();
                 switch (option)
                 {
