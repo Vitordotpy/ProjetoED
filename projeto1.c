@@ -4,42 +4,44 @@
 #include <string.h>  //usado strcmp
 #include <time.h>
 
+typedef char Str20[20];
+
 typedef struct Colaborador{
-    char date;
-    char timeIn;
-    char timeOut;
-    char details;
+    Str20 date;
+    Str20 timeIn;
+    Str20 timeOut;
+    Str20 details;
 } ColType;
 
 ColType registroFuncionario;
+Str20 currentDate;
+Str20 currentTime;
 
 FILE *fileFuncionario;
 
-char currentDate;
-char currentTime;
 char resposta;
 
 int option;
 
-char *getDate(){ //adquirir a data atual
+void getDate(){ //adquirir a data atual
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     char year = (char) (tm.tm_year + 1900);
     char month = (char) (tm.tm_mon + 1);
     char day = (char) (tm.tm_mday);
-    char date[] = {year, month, day};
-    currentDate = date;
+    Str20 date = {year,'-', month,'-', day};
+    strcpy(currentDate, date);
     return;
 }
 
-char *getTime(){ //adquirir a hora atual
+void getTime(){ //adquirir a hora atual
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     char hour = (char) (tm.tm_hour);
     char min = (char) (tm.tm_min);
     char sec = (char) (tm.tm_sec);
-    char time[] = {hour, min, sec};
-    currentTime = time;
+    Str20 time = {hour,':', min,':', sec};
+    strcpy(currentTime, time);
     return;
 }
 
@@ -59,7 +61,7 @@ int inputId(){ //input template para o ID
     return id;
 };
 
-int inputDate(){ //input template para a data
+char inputDate(){ //input template para a data
     system("cls");
     char date;
     printf("Inserir Data (DD-MM-AAAA): ");
@@ -78,17 +80,15 @@ void baterPonto(){
     short found = 0;
     do{
 	fread(&registroFuncionario,sizeof(ColType),1,fileFuncionario); //ler o arquivo
-	if (strcmp(&registroFuncionario.date, &currentDate)==0){ //testar se a data é igual a data atual
+	if (strcmp(registroFuncionario.date, currentDate)==0){ //testar se a data é igual a data atual
 	  found=1;}}
     while (!feof(fileFuncionario)); //fazer isso enquanto nao estiver no final do arquivo
 
     if (found == 0){ //se nao há data registrada, registra a data e hora atual no arquivo
-        registroFuncionario.date = currentDate;
-        registroFuncionario.timeIn = currentTime;
-        registroFuncionario.timeOut = "";
-        registroFuncionario.details = "";
+        strcpy(registroFuncionario.date, currentDate);
+        strcpy(registroFuncionario.timeIn, currentTime);
     }else{
-        registroFuncionario.timeOut = currentTime; //caso contrario registra a hora atual como horario de saída
+        strcpy(registroFuncionario.timeOut, currentTime); //caso contrario registra a hora atual como horario de saída
     }
 
     fseek(fileFuncionario, -sizeof(ColType), 1); //coloca o cursor onde leitura esta
@@ -135,11 +135,11 @@ void consultaTotal(){
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(registroFuncionario.date =! 'NULL'){
-            printf("***** %c *****\n\n", registroFuncionario.date);
-            printf("Chegada: %c\n",registroFuncionario.timeIn);
-            printf("Saida: %c\n",registroFuncionario.timeOut);
-            printf("Observações: %c\n\n",registroFuncionario.details);
+        if(strcmp(registroFuncionario.date, "NULL")){
+            printf("***** %s *****\n\n", registroFuncionario.date);
+            printf("Chegada: %s\n",registroFuncionario.timeIn);
+            printf("Saida: %s\n",registroFuncionario.timeOut);
+            printf("Observacoes: %s\n\n",registroFuncionario.details);
         }
     }while (!feof(fileFuncionario));
 
@@ -168,11 +168,11 @@ void alterar(){
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(&registroFuncionario.date, &date) == 0){
-            printf("***** %c *****\n\n", registroFuncionario.date);
-            printf("Chegada: %c\n",registroFuncionario.timeIn);
-            printf("Saida: %c\n",registroFuncionario.timeOut);
-            printf("Observacoes: %c\n\n",registroFuncionario.details);
+        if(strcmp(registroFuncionario.date, &date) == 0){
+            printf("***** %s *****\n\n", registroFuncionario.date);
+            printf("Chegada: %s\n",registroFuncionario.timeIn);
+            printf("Saida: %s\n",registroFuncionario.timeOut);
+            printf("Observacoes: %s\n\n",registroFuncionario.details);
 
             do
             {
@@ -188,27 +188,27 @@ void alterar(){
             case 1:
                 system("cls");
                 printf("Nova chegada: ");
-                char novaChegada;
-                scanf(" %s", &novaChegada);
+                Str20 novaChegada;
+                scanf(" %s", novaChegada);
                 fflush(stdin);
-                registroFuncionario.timeIn = novaChegada;
+                strcpy(registroFuncionario.timeIn, novaChegada);
                 break;
             
             case 2:
                 system("cls");
                 printf("Nova saida: ");
-                char novaSaida;
-                scanf(" %s", &novaSaida);
+                Str20 novaSaida;
+                scanf(" %s", novaSaida);
                 fflush(stdin);
-                registroFuncionario.timeOut = novaSaida;
+                strcpy(registroFuncionario.timeOut, novaSaida);
                 break;
             case 3:
                 system("cls");
                 printf("Observacoes: ");
-                char observacoes;
-                scanf(" %s", &observacoes);
+                Str20 observacoes;
+                scanf(" %s", observacoes);
                 fflush(stdin);
-                registroFuncionario.details = observacoes;
+                strcpy(registroFuncionario.details, observacoes);
             }
             printf("\nAlterar Outro Campo? S/N ");
             scanf(" %c",&resposta);
@@ -246,8 +246,8 @@ void remover(){
     fseek(fileFuncionario, 0, 0);
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(&registroFuncionario.date, &date)==0){
-            registroFuncionario.date = "NULL";
+        if(strcmp(registroFuncionario.date, &date)==0){
+            strcpy(registroFuncionario.date, "NULL");
             fseek(fileFuncionario, -sizeof(ColType), 1);
             fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
             fclose(fileFuncionario);
