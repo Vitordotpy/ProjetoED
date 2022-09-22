@@ -18,6 +18,9 @@ Str20 currentDate;
 Str20 currentTime;
 Str20 id;
 Str20 searchDate;
+int hours;
+int hoursTemp;
+Str20 temp;
 
 FILE *fileFuncionario;
 
@@ -64,32 +67,18 @@ void inputDate(){ //input template para a data
 
 void baterPonto(){
     inputId();
-    getDate();
     getTime();
 
     fileFuncionario = fopen(id, "a+b"); //abrir o arquivo
 
-    fseek(fileFuncionario, 0, 0);
-
-    int found = 0;
-    do{
-	fread(&registroFuncionario,sizeof(ColType),1,fileFuncionario); //ler o arquivo
-	if (strcmp(registroFuncionario.date, currentDate)==0){ //testar se a data é igual a data atual
-        found = 1;}
-        }
-    while (!feof(fileFuncionario) && (found!=1)); //fazer isso enquanto nao estiver no final do arquivo
-
-    if (found == 0){ //se nao há data registrada, registra a data e hora atual no arquivo
+    if (strcmp(registroFuncionario.date, currentDate)==0){ //testar se a data é igual a data atual
+        strcpy(registroFuncionario.timeOut, currentTime);
+    }else{
         strcpy(registroFuncionario.date, currentDate);
         strcpy(registroFuncionario.timeIn, currentTime);
-        fseek(fileFuncionario, -sizeof(ColType), 1);
-    }else{
-        strcpy(registroFuncionario.timeOut, currentTime);
-        fseek(fileFuncionario, -sizeof(ColType), 2);
-    };
+    }
     fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
     fclose(fileFuncionario); //fecha o arquivo 
-
     system("pause");
 };
 
@@ -98,16 +87,18 @@ void calcularHoras(){
 
     system("cls");
 
-    int hours;
-    char temp[20];
-
     fileFuncionario = fopen(id, "r+b");
 
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
         strncpy(temp,registroFuncionario.timeIn, 2);
-        hours = (int) temp;
+        sscanf(temp, "%d", &hoursTemp);
+        hours = hours + hoursTemp;
+        hoursTemp = 0;
+        strncpy(temp,registroFuncionario.timeOut, 2);
+        sscanf(temp, "%d", &hoursTemp);
+        hours -= hoursTemp;
     }while (!feof(fileFuncionario));
 
     fclose(fileFuncionario);
@@ -131,15 +122,15 @@ void consultaTotal(){
 
     fileFuncionario = fopen(id, "r+b");
 
-    do{
+    while (!feof(fileFuncionario)){
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
-        if(strcmp(registroFuncionario.date, "NULL")!=0){
+        if(strcmp(registroFuncionario.date, "NULL")!=0 && (!feof(fileFuncionario))){
             printf("***** %s *****\n\n", registroFuncionario.date);
             printf("Chegada: %s\n",registroFuncionario.timeIn);
             printf("Saida: %s\n",registroFuncionario.timeOut);
             printf("Observacoes: %s\n\n",registroFuncionario.details);
         }
-    }while (!feof(fileFuncionario));
+    }
 
     fclose(fileFuncionario);
 
@@ -266,6 +257,7 @@ void remover(){
 
 int main()
 {
+    getDate();
     while (option != 3){
         system("cls");
         printf("******** MAQUINA DE PONTO ********\n\n");
@@ -283,10 +275,16 @@ int main()
                 printf("1 - Bater Ponto\n");
                 printf("2 - Voltar\n");
                 input();
-                //Bater ponto
-                if(option == 1){
+                switch (option)
+                {
+                case 1:
                     baterPonto();
+                    break;
+                
+                case 2:
+                    break;
                 }
+                //Bater ponto
             }
             break;
         case 2: //financeiro
