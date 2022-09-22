@@ -4,6 +4,10 @@
 #include <string.h>  //usado strcmp
 #include <time.h>
 
+/*  Criação do registro que guarda data, hora de entrada, hora de saida e observações.
+    Criação das variaveis globais.
+*/
+
 typedef char Str20[20];
 
 typedef struct Colaborador{
@@ -28,28 +32,28 @@ char resposta;
 
 int option;
 
-void getDate(){ //adquirir a data atual
+void getDate(){ //adquirir a data atual e atualizar a variavel currentDate com essa informação
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     sprintf(currentDate, "%02d/%02d/%d", tm.tm_mday, tm.tm_mon + 1, tm.tm_year + 1900);
     return;
 }
 
-void getTime(){ //adquirir a hora atual
+void getTime(){ //adquirir a data atual e atualizar a variavel currentTime com essa informação
     time_t t = time(NULL);
     struct tm tm = *localtime(&t);
     sprintf(currentTime, "%02d:%02d:%02d", tm.tm_hour, tm.tm_min, tm.tm_sec);
     return;
 }
 
-void input(){ //input template para option
+void input(){ //adquirir a opção escolhida pelo usuário que é utilizada na main inumeras vezes
     printf("Opcao: ");
     scanf("%i",&option);
     fflush(stdin);
     return;
 };
 
-void inputId(){ //input template para o ID
+void inputId(){ //pede para o usuario inserir o id e atualiza a variavel id com essa informação
     system("cls");
     printf("Inserir ID: ");
     scanf("%s",id);
@@ -57,7 +61,7 @@ void inputId(){ //input template para o ID
     return;
 };
 
-void inputDate(){ //input template para a data
+void inputDate(){ //pede para o usuario inserir a data e atualiza a variavel searchDate com essa informação
     system("cls");
     printf("Inserir Data (DD/MM/AAAA): ");
     scanf("%s",searchDate);
@@ -66,14 +70,23 @@ void inputDate(){ //input template para a data
 };
 
 void baterPonto(){
+    /*FUNÇÃO DEFEITUOSA:
+        esta função abre/cria o arquivo com o id do usuário, logo após verifica se o ultimo registro do arquivo contém em seu campo "date" uma data
+        igual a data atual, se sim entao ele registra no campo timeOut a hora atual, ou seja, se há um registro com a data de hoje entao isso significa
+        que o usuario está batendo o ponto de saida, caso contrário será criado o registro com a data e hora de entrada atuais.
+        O problema surge no momento de bater o ponto de saída, pois, ao invés de alterar o ultimo registro do arquivo, o fwrite está escrevendo um registro novo
+        após o ultimo.
+    */
     inputId();
     getTime();
 
     fileFuncionario = fopen(id, "a+b"); //abrir o arquivo
 
     if (strcmp(registroFuncionario.date, currentDate)==0){ //testar se a data é igual a data atual
+        print("\nPonto de Saida...\n");
         strcpy(registroFuncionario.timeOut, currentTime);
     }else{
+        print("\nPonto de Entrada...\n");
         strcpy(registroFuncionario.date, currentDate);
         strcpy(registroFuncionario.timeIn, currentTime);
     }
@@ -88,7 +101,6 @@ void calcularHoras(){
     system("cls");
 
     fileFuncionario = fopen(id, "r+b");
-
 
     do{
         fread(&registroFuncionario, sizeof(ColType), 1, fileFuncionario);
