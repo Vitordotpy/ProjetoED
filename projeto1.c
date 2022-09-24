@@ -9,15 +9,15 @@
 */
 
 typedef struct Colaborador{
-    char date[10];
+    char date[20];
     char timeIn[10];
     char timeOut[10];
     char details[20];
 } ColType;
 
 ColType registroFuncionario;
-char currentDate[10];
-char currentTime[8];
+char currentDate[20];
+char currentTime[10];
 char id[4];
 char searchDate[10];
 int hours;
@@ -93,7 +93,7 @@ void baterPontoEntrada(){
 
     strcpy(registroFuncionario.date, currentDate);
     strcpy(registroFuncionario.timeIn, currentTime);
-
+    
     fwrite(&registroFuncionario, sizeof(ColType), 1, fileFuncionario); //salva os dados onde o cursor está
     fclose(fileFuncionario); //fecha o arquivo 
     system("pause");
@@ -241,7 +241,7 @@ void alterar(){
     }while (!feof(fileFuncionario));
 
     if(found == 0){
-        printf("Registro não encontrado!\n\n");
+        printf("Registro nao encontrado!\n\n");
     }
 
     printf("\nNova Alteracao? S/N ");
@@ -332,7 +332,7 @@ int main()
                 printf("3 - Alterar Ponto de Funcionario\n");
                 printf("4 - Remover Ponto de Funcionario\n");
                 printf("5 - Voltar\n");
-                input();
+                input3();
                 switch (option3)
                 {
                 case 1: //calcular horas trabalhadas, a partir do id
@@ -352,6 +352,7 @@ int main()
             }
             break;
         }
+        
 
     };
 
